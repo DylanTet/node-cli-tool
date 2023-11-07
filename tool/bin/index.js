@@ -2,20 +2,38 @@
 const arg = require('arg');
 const logger = require('../src/logger')('bin');
 const getConfig = require('../src/config/config-mgr');
-const start = require('../src/commands/start');
+const templateCommands = require('../src/commands/createTemplateCommands');
 
 try {
     const args = arg({
-        '--start': Boolean,
-        '--build': Boolean
+        '--template': String,
+        '--port': Number
     });
 
     logger.debug('Received args', args);
+    console.log(args);
+    const command = args['--template'];
 
-    if (args['--start']) {
+    if (command === undefined) {
+        logger.warning(`Please provide a command to the tool.`);
+        console.log();
+        usage();
+    }
+
+    if (command === 'create-server') {
         const config = getConfig();
-        start(config);
-    };
+
+        if (args['--port'] === undefined) {
+            console.log(args);
+            logger.warning("Need to provide --port with --create-server.");
+            console.log();
+            usage();
+        } else {
+            const port = args['--port'];
+            templateCommands.createServerFile(config, port);
+        }
+    }
+
 } catch (e) {
     logger.warning(e.message);
     console.log();
@@ -24,6 +42,6 @@ try {
 
 function usage() {
     console.log(`tool [CMD]
-    --start\tStarts the app
-    --build\tBuilds the app`);
+    --create-server\tCreates a server template index.js file.
+        --port\tSpecify the port number when creating the server. Or default 80 is used.`);
 }
